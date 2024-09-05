@@ -4,7 +4,7 @@
 
 # echo "Your public ip is: ${wanIp}";
 echo "Your public ip is: $(hostname -I)";
-hostname -I >> ip.md;
-git add .;
+hostname -I > ip.md;
+git add ip.md;
 git commit -m "update ip!";
 git push origin main;
