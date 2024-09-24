@@ -8,4 +8,4 @@ echo "Your public ip is: $(hostname -I)";
 hostname -I > ip.md;
 git add ip.md;
 git commit -m "update ip!";
-git push origin main;
+git push origin main --force;
