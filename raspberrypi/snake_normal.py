@@ -1,25 +1,12 @@
 import curses
 import random
-import RPi.GPIO as GPIO
-import time
-
-# GPIO setup
-BUTTON_PIN = 16
-JOYSTICK_X_PIN = 27
-JOYSTICK_Y_PIN = 17
-HARD_MODE_PIN = 18  # Toggle switch for hard mode
-
-GPIO.setmode(GPIO.BCM)
-GPIO.setup(BUTTON_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-GPIO.setup(JOYSTICK_X_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-GPIO.setup(JOYSTICK_Y_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-GPIO.setup(HARD_MODE_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
 # Initialize the curses screen
 stdscr = curses.initscr()
 curses.curs_set(0)  # Hide cursor
 sh, sw = stdscr.getmaxyx()  # Screen height and width
 w = curses.newwin(sh, sw, 0, 0)  # Create new window for the game
+w.keypad(1)  # Enable keypad input for capturing arrow keys
 w.timeout(100)  # Game speed, refresh every 100ms
 
 # Snake starting position
@@ -48,34 +35,15 @@ opposite_directions = {
 # Game loop
 def main():
     global direction, score, food, snake
-    hard_mode = False  # This will be controlled by the toggle switch later
+    hard_mode = False  # This will be a GPIO toggle switch later
 
     while True:
-        # Check if the hard mode switch is flipped
-        if GPIO.input(HARD_MODE_PIN) == GPIO.LOW:
-            hard_mode = not hard_mode
-            time.sleep(0.5)  # Debounce switch
+        # Get the next input key from the user (for now, use keyboard arrows)
+        next_key = w.getch()
 
-        # Poll for button press and read joystick direction
-        if GPIO.input(BUTTON_PIN) == GPIO.LOW:
-            time.sleep(0.2)  # Debounce button
-            joy_x = GPIO.input(JOYSTICK_X_PIN)
-            joy_y = GPIO.input(JOYSTICK_Y_PIN)
-
-            # Determine the new direction based on joystick input
-            new_direction = direction  # Keep the current direction as default
-            if joy_x == GPIO.LOW:
-                new_direction = curses.KEY_LEFT if not hard_mode else curses.KEY_RIGHT
-            elif joy_x == GPIO.HIGH:
-                new_direction = curses.KEY_RIGHT if not hard_mode else curses.KEY_LEFT
-            if joy_y == GPIO.LOW:
-                new_direction = curses.KEY_UP if not hard_mode else curses.KEY_DOWN
-            elif joy_y == GPIO.HIGH:
-                new_direction = curses.KEY_DOWN if not hard_mode else curses.KEY_UP
-
-            # Only update the direction if it's not the opposite of the current direction
-            if new_direction != opposite_directions.get(direction):
-                direction = new_direction
+        # Update direction based on key input (ignore if it's a 180-degree turn)
+        if next_key != -1 and next_key != opposite_directions.get(direction):
+            direction = next_key
 
         # Move snake based on the current direction
         head = snake[0]
@@ -117,12 +85,12 @@ def game_over():
     # Display game over message
     w.clear()
     w.addstr(sh // 2, sw // 2 - 7, "GAME OVER")
-    w.addstr(sh // 2 + 1, sw // 2 - 10, "Press button to restart")
+    w.addstr(sh // 2 + 1, sw // 2 - 10, "Press any key to restart")
     w.refresh()
 
-    # Wait for button press to restart
-    while GPIO.input(BUTTON_PIN) == GPIO.HIGH:
-        pass  # Wait until button is pressed
+    # Wait for any key press to restart
+    while w.getch() == -1:
+        pass  # Wait until a key is pressed
 
     restart_game()
 
@@ -152,6 +120,5 @@ if __name__ == "__main__":
     try:
         main()
     finally:
-        # Cleanup GPIO and curses
-        GPIO.cleanup()
+        # Cleanup curses
         curses.endwin()
