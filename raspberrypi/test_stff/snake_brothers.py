@@ -170,6 +170,20 @@ class Laser:
             self.alive = False  # Fade complete after 3 frames
 
 
+class Wall:
+    def __init__(self, positions):
+        self.positions = positions  # List of positions for wall segments
+
+    def draw(self, surface):
+        # Draw each wall segment as a rectangle (color different from snakes and apples)
+        for pos in self.positions:
+            pygame.draw.rect(
+                surface,
+                (128, 128, 128),
+                pygame.Rect(pos[0], pos[1], block_size, block_size),
+            )
+
+
 def check_snake_collision(snake_1, snake_2):
     # Check if the head of snake_1 collides with any part of snake_2's body
     if snake_1.body[0] in snake_2.body:
@@ -177,25 +191,47 @@ def check_snake_collision(snake_1, snake_2):
     return False
 
 
-def update_lasers(lasers, snake_1, snake_2):
+def update_lasers(lasers, snake_1, snake_2, walls):
     game_over = False
     for laser in lasers:
         if laser.deadly:
-            # Check if the laser intersects with snake_1 or snake_2 only during the deadly phase
+            # Remove any walls in the laser's path
+            for wall in walls:
+                wall.positions = [
+                    pos for pos in wall.positions if pos not in laser.positions
+                ]
+
+            # Handle snake_1
             for pos in laser.positions:
                 if pos in snake_1.body[1:]:  # Hit snake_1's body
                     idx = snake_1.body.index(pos)
-                    snake_1.body = snake_1.body[:idx]
+                    if idx + 1 < len(
+                        snake_1.body
+                    ):  # Only convert remaining parts to walls
+                        walls.append(Wall(snake_1.body[idx + 1 :]))
+                    snake_1.body = snake_1.body[
+                        :idx
+                    ]  # Keep only the head and part before the hit
+                    break  # Stop checking after hitting the snake
                 elif pos == snake_1.body[0]:  # Hit snake_1's head
                     game_over = True
 
+            # Handle snake_2
+            for pos in laser.positions:
                 if pos in snake_2.body[1:]:  # Hit snake_2's body
                     idx = snake_2.body.index(pos)
-                    snake_2.body = snake_2.body[:idx]
+                    if idx + 1 < len(
+                        snake_2.body
+                    ):  # Only convert remaining parts to walls
+                        walls.append(Wall(snake_2.body[idx + 1 :]))
+                    snake_2.body = snake_2.body[
+                        :idx
+                    ]  # Keep only the head and part before the hit
+                    break  # Stop checking after hitting the snake
                 elif pos == snake_2.body[0]:  # Hit snake_2's head
                     game_over = True
 
-            laser.deadly = False  # After first frame, laser is no longer deadly
+            laser.deadly = False  # Laser no longer deadly after first frame
 
     return game_over
 
@@ -277,7 +313,7 @@ def handle_input(snake_1, snake_2, active_snake, lasers, screen_width, screen_he
     return active_snake
 
 
-def update_game(snake_1, snake_2, apple, active_snake, last_snake_to_eat):
+def update_game(snake_1, snake_2, apple, active_snake, last_snake_to_eat, walls):
     # Move only the active snake
     active_snake.move()
 
@@ -299,14 +335,23 @@ def update_game(snake_1, snake_2, apple, active_snake, last_snake_to_eat):
     if check_snake_collision(active_snake, other_snake):
         return True, last_snake_to_eat  # Game over if collision between snakes
 
+    # Check for collision with walls
+    for wall in walls:
+        if active_snake.body[0] in wall.positions:
+            return True, last_snake_to_eat  # Game over if snake hits a wall
+
     return False, last_snake_to_eat  # Game continues
 
 
-def render_game(screen, snake_1, snake_2, apple, lasers, score, best_score):
+def render_game(screen, snake_1, snake_2, apple, lasers, walls, score, best_score):
     screen.fill(BLACK)
     snake_1.draw(screen)
     snake_2.draw(screen)
     apple.draw(screen)
+
+    # Draw walls
+    for wall in walls:
+        wall.draw(screen)
 
     # Draw lasers
     for laser in lasers:
@@ -335,6 +380,7 @@ def main():
     last_snake_to_eat = None
     score = 0
     lasers = []
+    walls = []  # Initialize walls list
 
     game_over = False
     while not game_over:
@@ -350,19 +396,18 @@ def main():
 
         # Update game state
         game_over, last_snake_to_eat = update_game(
-            snake_1, snake_2, apple, active_snake, last_snake_to_eat
+            snake_1, snake_2, apple, active_snake, last_snake_to_eat, walls
         )
 
-        # Update lasers and check if they hit a snake
-        if update_lasers(lasers, snake_1, snake_2):
+        # Update lasers and check if they hit a snake or walls
+        if update_lasers(lasers, snake_1, snake_2, walls):
             game_over = True  # If a laser hits a snake's head, game over
 
         # Render everything
-        render_game(screen, snake_1, snake_2, apple, lasers, score, best_score)
+        render_game(screen, snake_1, snake_2, apple, lasers, walls, score, best_score)
 
         clock.tick(snake_speed)
 
-    # Game Over: Add restart or quit functionality here
     pygame.quit()
     quit()
 
