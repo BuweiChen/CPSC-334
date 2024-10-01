@@ -7,7 +7,7 @@ import time
 BUTTON_PIN = 16
 JOYSTICK_X_PIN = 27
 JOYSTICK_Y_PIN = 17
-HARD_MODE_PIN = 18  # Toggle switch for hard mode
+HARD_MODE_PIN = 21  # Toggle switch for hard mode
 
 GPIO.setmode(GPIO.BCM)
 GPIO.setup(BUTTON_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
