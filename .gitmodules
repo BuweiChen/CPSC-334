@@ -1,0 +1,6 @@
+[submodule "m2_interactive_devices/task2/m1_generative_art"]
+	path = m2_interactive_devices/task2/m1_generative_art
+	url = https://github.com/BuweiChen/cpsc334-boids
+[submodule "m1_generative_art"]
+	path = m1_generative_art
+	url = https://github.com/BuweiChen/cpsc334-boids
