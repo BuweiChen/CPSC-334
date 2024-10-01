@@ -30,6 +30,7 @@ clock = pygame.time.Clock()
 
 # Global variables for score tracking
 best_score = 0
+score = 0
 
 # fps
 clock = pygame.time.Clock()
@@ -314,6 +315,7 @@ def handle_input(snake_1, snake_2, active_snake, lasers, screen_width, screen_he
 
 
 def update_game(snake_1, snake_2, apple, active_snake, last_snake_to_eat, walls):
+    global best_score, score
     # Move only the active snake
     active_snake.move()
 
@@ -323,6 +325,8 @@ def update_game(snake_1, snake_2, apple, active_snake, last_snake_to_eat, walls)
             active_snake.grow()
             apple.position = apple.random_position()
             last_snake_to_eat = active_snake
+            score += 1
+            best_score = max(score, best_score)
 
     # Check for self-collision and wall collision for the active snake
     if active_snake.collided_with_self() or active_snake.collided_with_wall(
@@ -364,52 +368,83 @@ def render_game(screen, snake_1, snake_2, apple, lasers, walls, score, best_scor
     score_text = font.render(f"Score: {score}", True, WHITE)
     best_score_text = font.render(f"Best Score: {best_score}", True, WHITE)
     screen.blit(score_text, [10, 10])
-    screen.blit(best_score_text, [screen_width - 150, 10])
+    screen.blit(best_score_text, [screen_width - 200, 10])
     pygame.display.flip()
 
     # Remove lasers after the fade completes
     lasers[:] = [laser for laser in lasers if laser.alive]
 
 
-def main():
-    global best_score
-    snake_1 = Snake(GREEN, 1)
-    snake_2 = Snake(WHITE, 2)
-    apple = Apple()
-    active_snake = snake_1
-    last_snake_to_eat = None
-    score = 0
-    lasers = []
-    walls = []  # Initialize walls list
+def end_screen():
+    screen.fill(BLACK)
+    end_message = font.render("Game Over! Press Button to Play Again", True, WHITE)
+    screen.blit(end_message, (screen_width // 4 - 30, screen_height // 2))
 
-    game_over = False
-    while not game_over:
+    pygame.display.flip()
+
+    # Wait for button press to restart
+    while True:
+        if ser.in_waiting > 0:
+            line = ser.readline().decode("utf-8").rstrip()
+            if line:
+                data = line.split(",")
+                if len(data) == 4:
+                    try:
+                        button_state = int(
+                            data[2]
+                        )  # The third value represents the button state
+                        if button_state == 0:  # Button pressed
+                            break
+                    except ValueError:
+                        pass  # Ignore malformed data
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 quit()
 
-        # Handle input and create lasers
-        active_snake = handle_input(
-            snake_1, snake_2, active_snake, lasers, screen_width, screen_height
-        )
 
-        # Update game state
-        game_over, last_snake_to_eat = update_game(
-            snake_1, snake_2, apple, active_snake, last_snake_to_eat, walls
-        )
+def main():
+    global best_score, score
+    while True:  # Game loop that allows restarting
+        snake_1 = Snake(GREEN, 1)
+        snake_2 = Snake(WHITE, 2)
+        apple = Apple()
+        active_snake = snake_1
+        last_snake_to_eat = None
+        score = 0
+        lasers = []
+        walls = []  # Initialize walls list
 
-        # Update lasers and check if they hit a snake or walls
-        if update_lasers(lasers, snake_1, snake_2, walls):
-            game_over = True  # If a laser hits a snake's head, game over
+        game_over = False
+        while not game_over:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    quit()
 
-        # Render everything
-        render_game(screen, snake_1, snake_2, apple, lasers, walls, score, best_score)
+            # Handle input and create lasers
+            active_snake = handle_input(
+                snake_1, snake_2, active_snake, lasers, screen_width, screen_height
+            )
 
-        clock.tick(snake_speed)
+            # Update game state
+            game_over, last_snake_to_eat = update_game(
+                snake_1, snake_2, apple, active_snake, last_snake_to_eat, walls
+            )
 
-    pygame.quit()
-    quit()
+            # Update lasers and check if they hit a snake or walls
+            if update_lasers(lasers, snake_1, snake_2, walls):
+                game_over = True  # If a laser hits a snake's head, game over
+
+            # Render everything
+            render_game(
+                screen, snake_1, snake_2, apple, lasers, walls, score, best_score
+            )
+
+            clock.tick(snake_speed)
+
+        # Game over screen and wait for restart
+        end_screen()
 
 
 if __name__ == "__main__":
