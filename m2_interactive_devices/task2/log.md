@@ -143,4 +143,138 @@ if max(x_deviation, y_deviation) > neutral_tolerance / max_deviation:
 
 You might have noticed already, we also don't want the snake to turn 180 degrees and instantly kills itself. The design is very human.
 
-Weird bug where when the snake shoots another snake from behind, only the first block disappears.
+2. Funny bug when switching to snake 2
+
+Try to spot the bug in the following lines, and predict the behavior of the program
+
+```py
+# Handle switching between snakes
+if switch_state == 1:
+    active_snake = snake_2 if active_snake == snake_1 else snake_1
+```
+
+Rather than having programmed the switch states to correspond to controlling snake 1 and snake 2, we've actually programmed it to continually switch between the two snakes while the switch is activated. This leads to bahavior like this:
+
+[video placeholder]
+
+3. Delay when reading input
+
+Initially, I programmed a portion of the `handleInput` function like this:
+
+```py
+global ser
+if ser.in_waiting > 0:
+    line = ser.readline().decode("utf-8").rstrip()
+```
+
+But I soon realized that this comes with the problem of mismatched reading/writing (from ESP32) rates, which caused input delay since the reading on our end is capped by the `fps` global variable.
+
+The fix for this is quite simple.
+
+```py
+global ser
+while ser.in_waiting > 0:
+    line = ser.readline().decode("utf-8").rstrip()
+```
+
+4. Every other line of ESP32 writes seem to be blank
+
+```py
+if line:
+    data = line.split(",")
+    if len(data) == 4:  # Ensure we have exactly 4 values
+        try:
+            # handle input
+            ...
+        except ValueError:
+            pass  # Ignore malformed data silently
+```
+
+Shh, what empty line?
+
+5. Snake doesn't eat apple correctly
+
+This is the code for handling apple-eating
+
+```py
+# Check if the active snake has eaten the apple and if it's its turn
+if active_snake.body[0] == apple.position:
+    if active_snake != last_snake_to_eat:
+        active_snake.grow()
+        apple.position = apple.random_position()
+        last_snake_to_eat = active_snake
+        score += 1
+        best_score = max(score, best_score)
+```
+
+Hmm weird. The apple eating logic seems sound, what could be the problem?
+
+Wait, why does the snake seem to always be half a snake-width offset from the apple?
+
+```py
+# global variable
+block_size = 20
+...
+class Snake:
+    def __init__(self, color):
+            self.body = [(100, 50), (80, 50), (60, 50)]  # Starting position
+            # Note that 50 is not a multiple of 20
+            self.direction = (1, 0)  # Starts moving to the right
+            ...
+```
+
+LOL
+
+6. Snake instantly dies after firing laser
+
+Let's look at this snippet of code for the `Laser` class
+
+```py
+# Determine the laser's path based on the direction
+# position is defined as the current head position of the snake
+if direction == (1, 0):  # Right
+    self.positions = [
+        (x, position[1])
+        for x in range(position[0], screen_width, block_size)
+    ]
+```
+
+See the problem? We are starting the laser where the snake head is! It's quite literally coming out of the skull of the snake. No wonder it instantly dies.
+
+The fix is actually a little more nuanced than just shifting the laser one block away from the head. Since technically the snake moves in the same frame it fires the laser, we actually want to move it two blocks rather than one.
+
+```py
+# Fix
+# Determine the laser's path based on the direction
+if direction == (1, 0):  # Right
+    self.positions = [
+        (x, position[1])
+        for x in range(position[0] + 2 * block_size, screen_width, block_size)
+    ]
+```
+
+7. Snake butt shield
+
+While my friend was play testing, he chose to shoot his other snake from behind. Weirdly, only the tail segment of the snake disappeared, and the snake lived.
+
+Let's dive into the code once more
+
+```py
+for pos in laser.positions:
+    if pos in snake_1.body[1:]:  # Hit snake_1's body
+        idx = snake_1.body.index(pos)
+        if idx + 1 < len(
+            snake_1.body
+        ):  # Only convert remaining parts to walls
+            walls.append(Wall(snake_1.body[idx + 1 :]))
+        snake_1.body = snake_1.body[
+            :idx
+        ]  # Keep only the head and part before the hit
+        break  # Stop checking after hitting the snake
+    elif pos == snake_1.body[0]:  # Hit snake_1's head
+        game_over = True
+```
+
+We actually stop checking after one segment of the snake is hit! I thought about changing this to the behavior I intended in the first place (deadly laser vaporizes everything in its path), but ultimately decided against it. The idea of a butt shield is funny and I think it would make for a fine feature.
+
+Also, this just makes turning the portion of the snake seperated by the laser into walls that much simpler.
