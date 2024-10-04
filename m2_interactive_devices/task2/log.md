@@ -1,5 +1,3 @@
-9/29/24
-
 #### Getting the esp32 to communicate with computer via python
 
 The easiest way to have esp32 communicate with computer via python is micropython.
