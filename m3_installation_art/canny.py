@@ -66,7 +66,7 @@ def display_image(image_path):
 
 def play_music(music_path):
     pg.mixer.music.load(music_path)
-    pg.mixer.music.play(-1)
+    pg.mixer.music.play(-1, 0.0)
 
 
 def get_full_filepath(path):
@@ -78,6 +78,7 @@ click_time = 0
 passed_time = 0
 
 done = False
+curr_sound_playing = None
 
 while not done:
     for event in pg.event.get():
@@ -95,10 +96,14 @@ while not done:
     # If 3 seconds have passed, blit the image.
     if passed_time >= 3:
         display_image(get_full_filepath("uncanny1.png"))
-        # play_music("/Users/buweichen/repos/CPSC-334/m3_installation_art/uncanny1.mp3")
+        if curr_sound_playing != "uncanny1.mp3":
+            play_music(get_full_filepath("uncanny1.mp3"))
+            curr_sound_playing = "uncanny1.mp3"
     else:
         display_image(get_full_filepath("uncanny2.png"))
-        # play_music("/Users/buweichen/repos/CPSC-334/m3_installation_art/uncanny2.mp3")
+        if curr_sound_playing != "uncanny2.mp3":
+            play_music(get_full_filepath("uncanny2.mp3"))
+            curr_sound_playing = "uncanny2.mp3"
 
     pg.display.flip()
     clock.tick(20)  # Set fps
