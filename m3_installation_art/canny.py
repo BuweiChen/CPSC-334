@@ -58,6 +58,14 @@ media_files = {
 }
 
 
+def get_distance():
+    return 0.0
+
+
+def get_heartrate():
+    return 0
+
+
 def display_image(image_path):
     image = pg.image.load(image_path)
     image = pg.transform.scale(image, (800, 600))
@@ -74,8 +82,7 @@ def get_full_filepath(path):
 
 
 clock = pg.time.Clock()
-click_time = 0
-passed_time = 0
+start_time = pg.time.get_ticks()
 
 done = False
 curr_sound_playing = None
@@ -84,26 +91,60 @@ while not done:
     for event in pg.event.get():
         if event.type == pg.QUIT:
             done = True
-        # Start the timer.
-        elif event.type == pg.MOUSEBUTTONDOWN:
-            click_time = pg.time.get_ticks()
 
-    screen.fill((30, 30, 30))
-    if click_time != 0:  # If timer has been started.
-        # Calculate the passed time since the click.
-        passed_time = (pg.time.get_ticks() - click_time) / 1000
+    if get_heartrate() > 60:
+        dist = get_distance()
+        if dist < 30:
+            display_image(get_full_filepath("uncanny5.png"))
+            if curr_sound_playing != "uncanny5.mp3":
+                play_music(get_full_filepath("uncanny5.mp3"))
+                curr_sound_playing = "uncanny5.mp3"
+        if dist < 60:
+            display_image(get_full_filepath("uncanny4.png"))
+            if curr_sound_playing != "uncanny4.mp3":
+                play_music(get_full_filepath("uncanny4.mp3"))
+                curr_sound_playing = "uncanny4.mp3"
+        if dist < 90:
+            display_image(get_full_filepath("uncanny3.png"))
+            if curr_sound_playing != "uncanny3.mp3":
+                play_music(get_full_filepath("uncanny3.mp3"))
+                curr_sound_playing = "uncanny3.mp3"
+        if dist < 120:
+            display_image(get_full_filepath("uncanny2.png"))
+            if curr_sound_playing != "uncanny2.mp3":
+                play_music(get_full_filepath("uncanny2.mp3"))
+                curr_sound_playing = "uncanny2.mp3"
 
-    # If 3 seconds have passed, blit the image.
-    if passed_time >= 3:
         display_image(get_full_filepath("uncanny1.png"))
         if curr_sound_playing != "uncanny1.mp3":
             play_music(get_full_filepath("uncanny1.mp3"))
             curr_sound_playing = "uncanny1.mp3"
     else:
-        display_image(get_full_filepath("uncanny2.png"))
-        if curr_sound_playing != "uncanny2.mp3":
-            play_music(get_full_filepath("uncanny2.mp3"))
-            curr_sound_playing = "uncanny2.mp3"
+        if dist < 30:
+            display_image(get_full_filepath("canny5.png"))
+            if curr_sound_playing != "canny5.mp3":
+                play_music(get_full_filepath("canny5.mp3"))
+                curr_sound_playing = "canny5.mp3"
+        if dist < 60:
+            display_image(get_full_filepath("canny4.png"))
+            if curr_sound_playing != "canny4.mp3":
+                play_music(get_full_filepath("canny4.mp3"))
+                curr_sound_playing = "canny4.mp3"
+        if dist < 90:
+            display_image(get_full_filepath("canny3.png"))
+            if curr_sound_playing != "canny3.mp3":
+                play_music(get_full_filepath("canny3.mp3"))
+                curr_sound_playing = "canny3.mp3"
+        if dist < 120:
+            display_image(get_full_filepath("canny2.png"))
+            if curr_sound_playing != "canny2.mp3":
+                play_music(get_full_filepath("canny2.mp3"))
+                curr_sound_playing = "canny2.mp3"
+
+        display_image(get_full_filepath("canny1.png"))
+        if curr_sound_playing != "canny1.mp3":
+            play_music(get_full_filepath("canny1.mp3"))
+            curr_sound_playing = "canny1.mp3"
 
     pg.display.flip()
     clock.tick(20)  # Set fps
