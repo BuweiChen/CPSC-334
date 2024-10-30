@@ -2,6 +2,10 @@ import pygame as pg
 
 import os
 
+import socket
+
+import threading
+
 pg.init()
 
 # screen setting
@@ -10,60 +14,43 @@ screen = pg.display.set_mode((800, 600))
 # pwd
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
-media_files = {
-    "uncanny": {
-        "1": {
-            "image": "uncanny1.png",
-            "music": "uncanny1.mp3",
-        },
-        "2": {
-            "image": "uncanny2.png",
-            "music": "uncanny2.mp3",
-        },
-        "3": {
-            "image": "uncanny3.png",
-            "music": "uncanny3.mp3",
-        },
-        "4": {
-            "image": "uncanny4.png",
-            "music": "uncanny4.mp3",
-        },
-        "5": {
-            "image": "uncanny5.png",
-            "music": "uncanny5.mp3",
-        },
-    },
-    "canny": {
-        "1": {
-            "image": "canny1.png",
-            "music": "canny1.mp3",
-        },
-        "2": {
-            "image": "canny2.png",
-            "music": "canny2.mp3",
-        },
-        "3": {
-            "image": "canny3.png",
-            "music": "canny3.mp3",
-        },
-        "4": {
-            "image": "canny4.png",
-            "music": "canny4.mp3",
-        },
-        "5": {
-            "image": "canny5.png",
-            "music": "canny5.mp3",
-        },
-    },
-}
+# Global variables to store distance and heart rate
+current_distance = 0.0
+current_heartrate = 0
 
+# ESP32 server settings
+ESP32_IP = "10.67.68.95"
+ESP32_PORT = 80
 
 def get_distance():
-    return 0.0
+    return current_distance
 
 
 def get_heartrate():
-    return 0
+    return current_heartrate
+
+def update_sensor_data():
+    global current_distance, current_heartrate
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+            sock.connect((ESP32_IP, ESP32_PORT))
+
+            while True:
+                data = sock.recv(1024).decode("utf-8").strip()
+                if not data:
+                    continue
+
+                for line in data.splitlines():
+                    # Parse data lines
+                    if "Heart Rate (BPM):" in line:
+                        current_heartrate = int(line.split(":")[1].strip())
+                    elif "Distance (cm):" in line:
+                        current_distance = float(line.split(":")[1].strip())
+                    else:
+                        # Handle empty lines or unrecognized data
+                        continue
+    except (socket.timeout, ConnectionRefusedError, OSError) as e:
+        print(f"Connection error: {e}")
 
 
 def display_image(image_path):
@@ -86,6 +73,11 @@ start_time = pg.time.get_ticks()
 
 done = False
 curr_sound_playing = None
+
+# Run the client in a background thread to constantly update data
+sensor_thread = threading.Thread(target=update_sensor_data)
+sensor_thread.daemon = True
+sensor_thread.start()
 
 while not done:
     for event in pg.event.get():
