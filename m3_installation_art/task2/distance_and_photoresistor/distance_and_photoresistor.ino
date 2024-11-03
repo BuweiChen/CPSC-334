@@ -13,7 +13,7 @@ const int trig_pin = 26;
 const int echo_pin = 25;
 
 long ultrason_duration;
-float distance_cm = 200; // default case is nothing in front
+float distance_cm;
 
 const int SAMPLE_INTERVAL = 50;         // Sampling interval
 const int HEART_RATE_WINDOW = 5000;     // 5-second window for heart rate
@@ -71,6 +71,7 @@ void distanceTask(void * parameter) {
   while (true) {
     // Set up the signal
     digitalWrite(trig_pin, LOW);
+    delayMicroseconds(2);
     digitalWrite(trig_pin, HIGH);
     delayMicroseconds(TRIG_PULSE_DURATION_US);
     digitalWrite(trig_pin, LOW);
@@ -83,6 +84,8 @@ void distanceTask(void * parameter) {
 
     Serial.print("Distance: ");
     Serial.println(distance_cm);
+
+    vTaskDelay(100);
   }
 }
 
