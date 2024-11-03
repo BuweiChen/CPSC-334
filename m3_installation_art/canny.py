@@ -91,16 +91,16 @@ def update_display_and_sound(is_uncanny, dist):
 
     for i, threshold in enumerate(thresholds):
         if dist < threshold:
-            display_image(images["uncanny" if is_uncanny else "canny"][4-i])
-            sound_path = sounds["uncanny" if is_uncanny else "canny"][4-i]
+            display_image(images["uncanny" if is_uncanny else "canny"][4 - i])
+            sound_path = sounds["uncanny" if is_uncanny else "canny"][4 - i]
             if curr_sound_playing != sound_path:
                 play_music(sound_path)
                 curr_sound_playing = sound_path
             return
 
     # Default to the farthest image and sound if no threshold matched
-    display_image(images["uncanny" if is_uncanny else "canny"][-1])
-    sound_path = sounds["uncanny" if is_uncanny else "canny"][-1]
+    display_image(images["uncanny" if is_uncanny else "canny"][0])
+    sound_path = sounds["uncanny" if is_uncanny else "canny"][0]
     if curr_sound_playing != sound_path:
         play_music(sound_path)
         curr_sound_playing = sound_path
