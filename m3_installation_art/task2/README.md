@@ -2,6 +2,8 @@
 
 An artful visualization of social anxiety with the aid of Mr Incredible and the Gom Jabbar box. Module 3 submission for CPSC 334 (Creative Embedded Systems).
 
+Project Video: https://youtu.be/t09To4tB3DI
+
 ## Code Walkthrough
 
 ### Heartbeat Sensor
