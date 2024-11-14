@@ -1,5 +1,5 @@
-#include "ESP32_NOW.h"
 #include "WiFi.h"
+#include <esp_now.h>
 #include <esp_mac.h> // For MAC2STR and MACSTR macros
 
 /* Definitions */
@@ -33,8 +33,6 @@ volatile bool broadcast_triggered = false;
 volatile bool reset_triggered = false;
 bool can_receive_broadcasts = true; // Determines if the device can receive broadcasts
 
-ESP_NOW_Network_Peer broadcast_peer(ESP_NOW.BROADCAST_ADDR, 0, NULL);
-
 /* Function Prototypes */
 void IRAM_ATTR onBroadcastButtonPress();
 void IRAM_ATTR onResetButtonPress();
@@ -43,9 +41,10 @@ void sendReturnMessage(const uint8_t *receiver_mac, uint8_t led_color);
 void resetDevice();
 void lightLED(uint8_t led_color);
 bool isValidMAC(const uint8_t *mac);
+void onDataReceive(const esp_now_recv_info_t *recv_info, const uint8_t *data, int len);
 
 /* Callbacks */
-void onReceive(const uint8_t *data, size_t len, bool broadcast) {
+void onDataReceive(const esp_now_recv_info_t *recv_info, const uint8_t *data, int len) {
     if (len != sizeof(message_t)) {
         Serial.println("Invalid message length. Ignoring.");
         return;
@@ -54,21 +53,21 @@ void onReceive(const uint8_t *data, size_t len, bool broadcast) {
     message_t *msg = (message_t *)data;
 
     // Validate MAC address
-    if (!isValidMAC(msg->sender_mac)) {
+    if (!isValidMAC(recv_info->src_addr)) {
         Serial.println("Invalid sender MAC. Ignoring.");
         return;
     }
 
     if (msg->message_type == 0 && can_receive_broadcasts) { // Broadcast
-        Serial.printf("Received broadcast from " MACSTR "\n", MAC2STR(msg->sender_mac));
+        Serial.printf("Received broadcast from " MACSTR "\n", MAC2STR(recv_info->src_addr));
 
         // Light up LED based on the sender's color
         lightLED(msg->led_color);
 
         // Send return message to the broadcasting device
-        sendReturnMessage(msg->sender_mac, (DEVICE_ID == 1) ? 0 : 1); // Example: 0 = red, 1 = green
+        sendReturnMessage(recv_info->src_addr, (DEVICE_ID == 1) ? 0 : 1); // Example: 0 = red, 1 = green
     } else if (msg->message_type == 1) { // Return call
-        Serial.printf("Received return call from " MACSTR "\n", MAC2STR(msg->sender_mac));
+        Serial.printf("Received return call from " MACSTR "\n", MAC2STR(recv_info->src_addr));
 
         // Light up LED based on the sender's color
         lightLED(msg->led_color);
@@ -93,7 +92,7 @@ void broadcastMessage() {
     msg.message_type = 0; // Broadcast
     msg.led_color = (DEVICE_ID == 1) ? 0 : 1; // Example: 0 = red, 1 = green
 
-    if (!broadcast_peer.send_message((uint8_t *)&msg, sizeof(msg))) {
+    if (esp_now_send(NULL, (uint8_t *)&msg, sizeof(msg)) != ESP_OK) { // NULL for broadcast
         Serial.println("Broadcast failed");
     } else {
         Serial.println("Broadcast sent successfully");
@@ -108,8 +107,7 @@ void sendReturnMessage(const uint8_t *receiver_mac, uint8_t led_color) {
     msg.message_type = 1; // Return call
     msg.led_color = led_color;
 
-    ESP_NOW_Network_Peer receiver(receiver_mac);
-    if (!receiver.send_message((uint8_t *)&msg, sizeof(msg))) {
+    if (esp_now_send(receiver_mac, (uint8_t *)&msg, sizeof(msg)) != ESP_OK) {
         Serial.println("Return message failed");
     } else {
         Serial.println("Return message sent successfully");
@@ -157,17 +155,24 @@ void setup() {
     WiFi.setChannel(ESPNOW_WIFI_CHANNEL);
 
     // ESP-NOW setup
-    if (!ESP_NOW.begin((const uint8_t *)ESPNOW_EXAMPLE_PMK)) {
+    if (esp_now_init() != ESP_OK) {
         Serial.println("Failed to initialize ESP-NOW");
         ESP.restart();
     }
 
-    if (!broadcast_peer.begin()) {
-        Serial.println("Failed to initialize broadcast peer");
+    // Set up ESP-NOW peer
+    uint8_t broadcast_mac[6] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+    esp_now_peer_info_t peer_info = {};
+    memcpy(peer_info.peer_addr, broadcast_mac, 6);
+    peer_info.channel = ESPNOW_WIFI_CHANNEL;
+    peer_info.ifidx = ESPNOW_WIFI_IFACE;
+
+    if (esp_now_add_peer(&peer_info) != ESP_OK) {
+        Serial.println("Failed to add ESP-NOW peer");
         ESP.restart();
     }
 
-    ESP_NOW.onReceive(onReceive, NULL);
+    esp_now_re gister_recv_cb(onDataReceive);
 
     Serial.println("Setup complete. Ready to receive broadcasts.");
 }
