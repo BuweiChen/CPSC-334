@@ -17,9 +17,9 @@
 #define LED_GREEN_PIN 14
 
 /* Hardcoded MAC Addresses (replace with actual MACs of the devices) */
-const uint8_t DEVICE1_MAC[6] = {0x24, 0x6F, 0x28, 0xAA, 0xBB, 0x01};
-const uint8_t DEVICE2_MAC[6] = {0x24, 0x6F, 0x28, 0xAA, 0xBB, 0x02};
-const uint8_t DEVICE3_MAC[6] = {0x24, 0x6F, 0x28, 0xAA, 0xBB, 0x03};
+const uint8_t DEVICE1_MAC[6] = {0x48, 0xE7, 0x29, 0x3F, 0xC4, 0x14};
+const uint8_t DEVICE2_MAC[6] = {0xE8, 0x68, 0xE7, 0x30, 0x61, 0x44};
+const uint8_t DEVICE3_MAC[6] = {0x48, 0xE7, 0x29, 0x3F, 0x88, 0x6C};
 
 /* Message Structure */
 typedef struct {
@@ -61,16 +61,34 @@ void onDataReceive(const esp_now_recv_info_t *recv_info, const uint8_t *data, in
     if (msg->message_type == 0 && can_receive_broadcasts) { // Broadcast
         Serial.printf("Received broadcast from " MACSTR "\n", MAC2STR(recv_info->src_addr));
 
-        // Light up LED based on the sender's color
-        lightLED(msg->led_color);
+        // Light up LED based on the sender
+        if (memcmp(recv_info->src_addr, DEVICE1_MAC, 6) == 0) {
+            lightLED((DEVICE_ID == 2) ? 0 : 1); // Device 2 = Red, Device 3 = Green
+        } else if (memcmp(recv_info->src_addr, DEVICE2_MAC, 6) == 0) {
+            lightLED((DEVICE_ID == 1) ? 0 : 1); // Device 1 = Red, Device 3 = Green
+        } else if (memcmp(recv_info->src_addr, DEVICE3_MAC, 6) == 0) {
+            lightLED((DEVICE_ID == 1) ? 0 : 1); // Device 1 = Red, Device 2 = Green
+        }
 
         // Send return message to the broadcasting device
-        sendReturnMessage(recv_info->src_addr, (DEVICE_ID == 1) ? 0 : 1); // Example: 0 = red, 1 = green
+        sendReturnMessage(recv_info->src_addr, (DEVICE_ID == 1) ? 0 : 1);
     } else if (msg->message_type == 1) { // Return call
         Serial.printf("Received return call from " MACSTR "\n", MAC2STR(recv_info->src_addr));
 
-        // Light up LED based on the sender's color
-        lightLED(msg->led_color);
+        // Broadcasting device lights up based on first return call
+        if (DEVICE_ID == 1 && memcmp(recv_info->src_addr, DEVICE2_MAC, 6) == 0) {
+            lightLED(0); // Red
+        } else if (DEVICE_ID == 1 && memcmp(recv_info->src_addr, DEVICE3_MAC, 6) == 0) {
+            lightLED(1); // Green
+        } else if (DEVICE_ID == 2 && memcmp(recv_info->src_addr, DEVICE1_MAC, 6) == 0) {
+            lightLED(0); // Red
+        } else if (DEVICE_ID == 2 && memcmp(recv_info->src_addr, DEVICE3_MAC, 6) == 0) {
+            lightLED(1); // Green
+        } else if (DEVICE_ID == 3 && memcmp(recv_info->src_addr, DEVICE1_MAC, 6) == 0) {
+            lightLED(0); // Red
+        } else if (DEVICE_ID == 3 && memcmp(recv_info->src_addr, DEVICE2_MAC, 6) == 0) {
+            lightLED(1); // Green
+        }
     }
 }
 
@@ -172,7 +190,7 @@ void setup() {
         ESP.restart();
     }
 
-    esp_now_re gister_recv_cb(onDataReceive);
+    esp_now_register_recv_cb(onDataReceive);
 
     Serial.println("Setup complete. Ready to receive broadcasts.");
 }
@@ -182,7 +200,9 @@ void loop() {
     if (broadcast_triggered) {
         broadcast_triggered = false;
         Serial.println("Broadcast button pressed. Broadcasting...");
+        WiFi.setChannel(0);
         broadcastMessage();
+        WiFi.setChannel(ESPNOW_WIFI_CHANNEL);
     }
 
     if (reset_triggered) {
