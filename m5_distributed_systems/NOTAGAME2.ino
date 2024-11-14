@@ -8,7 +8,7 @@
 #define ESPNOW_EXAMPLE_PMK "pmk1234567890123"
 
 // Device-specific configuration
-#define DEVICE_ID 1 // Set this to 1, 2, or 3 for each device
+#define DEVICE_ID 3 // Set this to 1, 2, or 3 for each device
 
 // GPIO Pins
 #define BROADCAST_BUTTON_PIN 4
@@ -19,6 +19,8 @@
 /* Hardcoded MAC Addresses (replace with actual MACs of the devices) */
 const uint8_t DEVICE1_MAC[6] = {0x48, 0xE7, 0x29, 0x3F, 0xC4, 0x14};
 const uint8_t DEVICE2_MAC[6] = {0xE8, 0x68, 0xE7, 0x30, 0x61, 0x44};
+// e8:68:e7:30:2c:2c
+// const uint8_t DEVICE2_MAC[6] = {0xE8, 0x68, 0xE7, 0x30, 0x2c, 0x2c};
 const uint8_t DEVICE3_MAC[6] = {0x48, 0xE7, 0x29, 0x3F, 0x88, 0x6C};
 
 /* Message Structure */
@@ -178,7 +180,7 @@ void setup() {
         ESP.restart();
     }
 
-    // Set up ESP-NOW peer
+    // Add broadcast MAC to the peer list
     uint8_t broadcast_mac[6] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
     esp_now_peer_info_t peer_info = {};
     memcpy(peer_info.peer_addr, broadcast_mac, 6);
@@ -186,14 +188,30 @@ void setup() {
     peer_info.ifidx = ESPNOW_WIFI_IFACE;
 
     if (esp_now_add_peer(&peer_info) != ESP_OK) {
-        Serial.println("Failed to add ESP-NOW peer");
+        Serial.println("Failed to add broadcast peer");
         ESP.restart();
+    }
+
+    // Add individual device MACs to the peer list
+    uint8_t device_macs[3][6] = {
+        {0x48, 0xE7, 0x29, 0x3F, 0xC4, 0x14}, // DEVICE1_MAC
+        {0xE8, 0x68, 0xE7, 0x30, 0x61, 0x44}, // DEVICE2_MAC
+        {0x48, 0xE7, 0x29, 0x3F, 0x88, 0x6C}  // DEVICE3_MAC
+    };
+
+    for (int i = 0; i < 3; i++) {
+        memcpy(peer_info.peer_addr, device_macs[i], 6);
+        if (esp_now_add_peer(&peer_info) != ESP_OK) {
+            Serial.printf("Failed to add peer %d\n", i + 1);
+            ESP.restart();
+        }
     }
 
     esp_now_register_recv_cb(onDataReceive);
 
     Serial.println("Setup complete. Ready to receive broadcasts.");
 }
+
 
 /* Main Loop */
 void loop() {
