@@ -1,8 +1,3 @@
-
-// #define BROADCAST_BUTTON_PIN 4
-// #define RESET_BUTTON_PIN 5
-// #define LED_RED_PIN 12
-// #define LED_GREEN_PIN 14
 #include "ESP32_NOW.h"
 #include "WiFi.h"
 #include <esp_mac.h> // For MAC2STR and MACSTR macros
