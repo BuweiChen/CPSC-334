@@ -10,3 +10,20 @@ Moving some code and reference code into the template so I can keep track.
 
 next up is just verifying and assembling the 3D print
 
+12/12 10:41 PM
+
+Just spent the better part of 4-ish hours making a housing for the laser. Might have been grief for me but I think it's worth it. Guess we'll see. Just started print and I will check back in 3.5 hours. Time to write some code for the esp32 sense
+
+12/13 12:10 AM
+
+Finally got the seeed sense to work. Video seems chopy. I suspect it's because it's over heating. Need to try to power it with less wattage.
+
+12/13 12:33 AM
+
+Think I got it to work better, followed this comment on reddit https://www.reddit.com/r/esp32/comments/c4iy1j/comment/m1d3a92/?utm_source=share&utm_medium=web3x&utm_name=web3xcss&utm_term=1&utm_content=share_button
+
+Will also try antanna shielding
+
+12/13 4:07 PM
+
+Prints turned out super well, so I'm just assembling now. Went to pick up the nerf darts and servos. Got cooked by the fun police (no 200 mW laser in doors sadge). Might need to pick up some metric counter sunk screws later since the ceid apparently doesn't have those. The ceid staff is also leaving and locking the stuff up as we speak, so hopefully I have all I need for the time being.
