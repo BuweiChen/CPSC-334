@@ -27,3 +27,7 @@ Will also try antanna shielding
 12/13 4:07 PM
 
 Prints turned out super well, so I'm just assembling now. Went to pick up the nerf darts and servos. Got cooked by the fun police (no 200 mW laser in doors sadge). Might need to pick up some metric counter sunk screws later since the ceid apparently doesn't have those. The ceid staff is also leaving and locking the stuff up as we speak, so hopefully I have all I need for the time being.
+
+12/13 5:05 PM
+
+Finished assembling it. IT LOOKS SO SICK. Gotta reprint 2 parts I think. One is the right laser housing, the front is interfering with the fly wheel. Second is the neck (idk what to call it), just need to invert it since I inverted the direction where I'm attaching the top and neck--to give it more range of motion. But overall AMAZING success!
