@@ -31,3 +31,12 @@ Prints turned out super well, so I'm just assembling now. Went to pick up the ne
 12/13 5:05 PM
 
 Finished assembling it. IT LOOKS SO SICK. Gotta reprint 2 parts I think. One is the right laser housing, the front is interfering with the fly wheel. Second is the neck (idk what to call it), just need to invert it since I inverted the direction where I'm attaching the top and neck--to give it more range of motion. But overall AMAZING success!
+
+PS: just started print of the replacement parts. Chose some cool colors. Checking back in in an hour.
+
+PS 2: probably need to reprint the esp32/buck mount too. esp32 measures 27.1 mm across and the buck is 20.3 mm
+
+12/13 8:32 PM
+
+Print came out great. Just assembled most of it. All there's left of the build is just getting the laser trigger part assembled, which I just started a print for. Time to say goodbye to the janky popsicle stick!
+
