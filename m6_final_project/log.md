@@ -40,3 +40,14 @@ PS 2: probably need to reprint the esp32/buck mount too. esp32 measures 27.1 mm 
 
 Print came out great. Just assembled most of it. All there's left of the build is just getting the laser trigger part assembled, which I just started a print for. Time to say goodbye to the janky popsicle stick!
 
+12/14 3:16 AM
+
+To say I've been through hell and back in the last 6 hours is the understatement of the century. I don't have much battery left so I'll make it quick. I have learned so much about building with hardware and designing with computers during this project it's not even funny.
+
+I finished the electronics. The diode was giving me so much trouble because it's near impossible to coax it to go through the motor leads like I want it to. I messed it up at least 5 times (spin direction was wrong, diode orientation wrong, pulled off motor lead, to name a few).
+
+Somehow the mosfet stopped working, and I had to pull off the resistor to make it work. Only god knows why.
+
+The highlight of the electrical build was definitely figuring out how the MTA connectors worked. There's this gun shaped thing in the drawers that you need to use on the connectors and it only works with solid core wires with no lead. I had to redo so much just because I was using the connectors incorrectly and through troubleshooting in general.
+
+I'm so glad I ended the night having saw my turret fire.
