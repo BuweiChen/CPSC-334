@@ -4,10 +4,18 @@ import requests
 import random
 import threading
 import time
+import pygame
 
 # ESP32 Server Configuration
 ESP32_IP = "192.168.4.1"
 PORT = 80
+
+VOICE_LINES = {
+    "Happy": ["voices/happy1.mp3", "voices/happy2.mp3", "voices/happy3.mp3"],
+    "Sad": ["voices/sad1.mp3", "voices/sad2.mp3", "voices/sad3.mp3"],
+    "Angry": ["voices/angry1.mp3", "voices/angry2.mp3", "voices/angry3.mp3"],
+    "Neutral": ["voices/neutral1.mp3", "voices/neutral2.mp3"],
+}
 
 
 class TurretControlApp:
@@ -110,17 +118,32 @@ class TurretControlApp:
         self.status_label = tk.Label(self.root, text="Status: Ready", fg="green")
         self.status_label.place(x=10, y=30)
 
+    # --- Voice Lines ---
+    def play_voice_line(self, mood):
+        if mood in VOICE_LINES and not self.commands_blocked:
+            line = random.choice(VOICE_LINES[mood])
+            try:
+                pygame.mixer.music.load(line)
+                pygame.mixer.music.play()
+            except Exception as e:
+                print(f"Failed to play voice line: {e}")
+
     # --- Mood System ---
     def start_threads(self):
         threading.Thread(target=self.mood_loop, daemon=True).start()
         threading.Thread(target=self.increase_sad_chance, daemon=True).start()
-        pass
+        threading.Thread(target=self.play_voice_lines, daemon=True).start()
 
     def mood_loop(self):
         while True:
             # time.sleep(random.randint(5, 15))
             time.sleep(random.randint(2, 5))
             self.determine_mood()
+
+    def play_voice_lines(self):
+        while True:
+            time.sleep(random.randint(5, 15))
+            self.play_voice_line(self.current_mood)
 
     def increase_sad_chance(self):
         while True:
@@ -131,6 +154,7 @@ class TurretControlApp:
     def determine_mood(self):
         if random.randint(1, 100) <= self.angry_chance:
             self.current_mood = "Angry"
+            self.play_voice_line(self.current_mood)
             self.perform_angry_action()
         elif random.randint(1, 100) <= self.sad_chance:
             self.current_mood = "Sad"
@@ -201,6 +225,7 @@ class TurretControlApp:
         if self.cursor_tracking and not self.is_cursor_in_aim_area():
             return
         if self.current_mood == "Sad":
+            self.play_voice_line(self.current_mood)
             self.shake_head()
             return
         self.send_command("S1")

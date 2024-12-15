@@ -15,7 +15,7 @@ VOICE_LINES = {
         "Feeling a little down.",
         "Why so quiet?",
         "Maybe I need some rest.",
-        "I feel like shaking my head.",
+        "This is so cooked",
     ],
     "Angry": [
         "Hey! Watch it!",
