@@ -54,6 +54,9 @@ void setup() {
 
   server.begin(); // Start the server
   Serial.println("Server started.");
+
+  handleCommand("GET /?S1L0 HTTP/1.1");
+  handleCommand("GET /?S1L0 HTTP/1.1");
 }
 
 void loop() {

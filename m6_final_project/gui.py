@@ -145,6 +145,20 @@ class TurretControlApp:
             self.dance_button.place(x=250, y=270)
         else:
             self.dance_button.place_forget()
+        self.render_mood_icon()
+
+    def render_mood_icon(self):
+        mood_icons = {
+            "Neutral": (":|", "black"),
+            "Happy": (":)", "green"),
+            "Sad": (":(", "blue"),
+            "Angry": (">:(", "red"),
+        }
+        self.aim_area.delete("mood_icon")
+        icon, color = mood_icons.get(self.current_mood, (":|", "black"))
+        self.aim_area.create_text(
+            100, 100, text=icon, tags="mood_icon", font=("Arial", 100), fill=color
+        )
 
     def perform_angry_action(self):
         self.commands_blocked = True
