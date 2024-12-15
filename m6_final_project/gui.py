@@ -14,14 +14,16 @@ class TurretControlApp:
     def __init__(self, root):
         self.root = root
         self.root.title("Turret Control Interface")
-        self.root.geometry("400x450")
+        self.root.geometry("400x500")
         self.cursor_tracking = False
-        self.current_mood = "Neutral"
+        # self.current_mood = "Neutral"
+        self.current_mood = "Happy"
 
         # Mood system variables
         self.angry_chance = 0
         self.sad_chance = 10
         self.last_command_time = time.time()
+        self.commands_blocked = False
 
         # Variables for state
         self.motor_enabled = BooleanVar(value=False)
@@ -32,13 +34,15 @@ class TurretControlApp:
 
         # Create UI components
         self.create_widgets()
-        self.update_mood_loop()
+        self.start_threads()
 
         # Bind keyboard events
         self.root.bind("<m>", lambda event: self.toggle_motor())
         self.root.bind("<l>", lambda event: self.toggle_laser())
         self.root.bind("<Button-1>", lambda event: self.shoot_action())
         self.root.bind("<Escape>", lambda event: self.toggle_cursor_tracking(False))
+
+        self.update_mood_display()
 
     # --- UI Creation ---
     def create_widgets(self):
@@ -84,11 +88,11 @@ class TurretControlApp:
 
         # Mood Display
         self.mood_label = Label(
-            self.root, text="Mood: Neutral", fg="blue", font=("Arial", 10)
+            self.root, text=f"Mood: {self.current_mood}", fg="blue", font=("Arial", 10)
         )
         self.mood_label.place(x=10, y=10)
 
-        # Dance Button (Hidden until Happy mood)
+        # Dance Button
         self.dance_button = tk.Button(
             self.root, text="Click to Dance", command=self.dance_action
         )
@@ -99,35 +103,35 @@ class TurretControlApp:
         self.status_label = tk.Label(self.root, text="Status: Ready", fg="green")
         self.status_label.place(x=10, y=30)
 
-    # --- Command Sending Function ---
-    def send_command(self, command):
-        try:
-            url = f"http://{ESP32_IP}:{PORT}/?{command}"
-            requests.get(url)
-            self.last_command_time = time.time()
-            self.status_label.config(text="Command Sent", fg="green")
-        except Exception as e:
-            self.status_label.config(text=f"Error: {e}", fg="red")
-
     # --- Mood System ---
-    def update_mood_loop(self):
-        def mood_loop():
-            while True:
-                time.sleep(random.randint(5, 15))
-                self.determine_mood()
-                self.update_mood_display()
+    def start_threads(self):
+        # threading.Thread(target=self.mood_loop, daemon=True).start()
+        # threading.Thread(target=self.increase_sad_chance, daemon=True).start()
+        pass
 
-        threading.Thread(target=mood_loop, daemon=True).start()
+    def mood_loop(self):
+        while True:
+            time.sleep(random.randint(5, 15))
+            self.determine_mood()
+
+    def increase_sad_chance(self):
+        while True:
+            time.sleep(5)
+            if time.time() - self.last_command_time > 5:
+                self.sad_chance += 10
 
     def determine_mood(self):
+        if self.commands_blocked:
+            return  # Skip if actions are blocked
         if random.randint(1, 100) <= self.angry_chance:
             self.current_mood = "Angry"
-            self.angry_chance = 0  # Reset
+            self.perform_angry_action()
         elif random.randint(1, 100) <= self.sad_chance:
             self.current_mood = "Sad"
-            self.sad_chance = 10  # Reset
         else:
             self.current_mood = random.choice(["Neutral", "Happy"])
+
+        self.update_mood_display()
 
     def update_mood_display(self):
         self.mood_label.config(text=f"Mood: {self.current_mood}")
@@ -136,8 +140,21 @@ class TurretControlApp:
         else:
             self.dance_button.place_forget()
 
+    def perform_angry_action(self):
+        self.commands_blocked = True
+        self.status_label.config(text="Angry! Blocking Commands...", fg="red")
+        random_pan = self.pan_value.get() + random.choice([-10, 10])
+        random_tilt = self.tilt_value.get() + random.choice([-10, 10])
+        self.send_command(f"P{random_pan}T{random_tilt}")
+        self.send_command("M1")
+        time.sleep(2)
+        self.send_command("M0")
+        self.commands_blocked = False
+
     # --- Event Handlers ---
     def toggle_motor(self):
+        if self.commands_blocked:
+            return
         self.motor_enabled.set(not self.motor_enabled.get())
         state = 255 if self.motor_enabled.get() else 0
         self.speed_value.set(state)
@@ -146,6 +163,8 @@ class TurretControlApp:
         self.send_command(f"M{int(self.motor_enabled.get())}")
 
     def toggle_laser(self):
+        if self.commands_blocked:
+            return
         self.laser_enabled.set(not self.laser_enabled.get())
         self.laser_button.config(
             text=f"Laser: {'On' if self.laser_enabled.get() else 'Off'}"
@@ -153,37 +172,47 @@ class TurretControlApp:
         self.send_command(f"L{int(self.laser_enabled.get())}")
 
     def shoot_action(self):
+        if self.commands_blocked:
+            return
         if self.current_mood == "Sad":
             self.shake_head()
             return
         self.send_command("S1")
-        self.status_label.config(text="Shooting", fg="orange")
         self.angry_chance += 4
 
     def dance_action(self):
-        for step in [
-            (90, 110),
-            (80, 100),
+        self.commands_blocked = True
+        dance_moves = [
+            (90, 130),
             (70, 120),
-            (80, 100),
-            (90, 110),
-            (100, 100),
+            (50, 140),
+            (70, 120),
+            (90, 140),
             (110, 120),
-            (100, 100),
-        ]:
-            self.send_command(f"P{step[0]}T{step[1]}")
+            (130, 140),
+            (110, 120),
+            (90, 130),
+            (150, 130),
+            (190, 130),
+            (150, 130),
+            (90, 130),
+            (50, 130),
+            (10, 130),
+            (50, 130),
+            (90, 130),
+        ]
+        for x, y in dance_moves:
+            self.send_command(f"P{x}T{y}")
             time.sleep(0.5)
+        self.commands_blocked = False
 
     def shake_head(self):
-        for step in [
-            ("P90", "T140"),
-            ("P80", "T140"),
-            ("P100", "T140"),
-            ("P80", "T140"),
-            ("P90", "T140"),
-        ]:
-            self.send_command(f"{step[0]}{step[1]}")
+        self.commands_blocked = True
+        head_shake = [(90, 140), (80, 140), (100, 140), (80, 140), (90, 140)]
+        for x, y in head_shake:
+            self.send_command(f"P{x}T{y}")
             time.sleep(0.5)
+        self.commands_blocked = False
 
     def toggle_cursor_tracking(self, state=None):
         self.cursor_tracking = state if state is not None else not self.cursor_tracking
@@ -192,21 +221,32 @@ class TurretControlApp:
         )
 
     def cursor_motion(self, event):
-        if self.cursor_tracking:
-            x = int(event.x / self.aim_area.winfo_width() * 180)
-            y = int(event.y / self.aim_area.winfo_height() * 180) + 30
-            x, y = 180 - max(0, min(180, x)), max(30, min(210, y))
-            self.pan_value.set(x)
-            self.tilt_value.set(y)
-            self.send_command(f"P{x}T{y}")
-
-    def click_to_aim(self, event):
+        if self.commands_blocked or not self.cursor_tracking:
+            return
         x = int(event.x / self.aim_area.winfo_width() * 180)
         y = int(event.y / self.aim_area.winfo_height() * 180) + 30
         x, y = 180 - max(0, min(180, x)), max(30, min(210, y))
         self.pan_value.set(x)
         self.tilt_value.set(y)
         self.send_command(f"P{x}T{y}")
+
+    def click_to_aim(self, event):
+        if self.commands_blocked:
+            return
+        x = int(event.x / self.aim_area.winfo_width() * 180)
+        y = int(event.y / self.aim_area.winfo_height() * 180) + 30
+        x, y = 180 - max(0, min(180, x)), max(30, min(210, y))
+        self.pan_value.set(x)
+        self.tilt_value.set(y)
+        self.send_command(f"P{x}T{y}")
+
+    def send_command(self, command):
+        try:
+            url = f"http://{ESP32_IP}:{PORT}/?{command}"
+            requests.get(url)
+            self.last_command_time = time.time()
+        except Exception as e:
+            print(f"Command Error: {e}")
 
 
 # Run the app
