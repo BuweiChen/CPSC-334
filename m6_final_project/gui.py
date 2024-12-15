@@ -40,6 +40,8 @@ class TurretControlApp:
         self.pan_value = IntVar(value=90)
         self.tilt_value = IntVar(value=140)
 
+        pygame.init()
+
         # Create UI components
         self.create_widgets()
         self.start_threads()
@@ -142,7 +144,8 @@ class TurretControlApp:
 
     def play_voice_lines(self):
         while True:
-            time.sleep(random.randint(5, 15))
+            # time.sleep(random.randint(5, 15))
+            time.sleep(random.randint(2, 5))
             self.play_voice_line(self.current_mood)
 
     def increase_sad_chance(self):
