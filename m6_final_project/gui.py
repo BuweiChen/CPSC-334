@@ -44,7 +44,9 @@ class TurretControlApp:
         # Bind shoot action only in cursor track mode
         self.aim_area.bind(
             "<Button-1>",
-            lambda event: self.shoot_action() if self.cursor_tracking else None,
+            lambda event: self.shoot_action()
+            if self.cursor_tracking
+            else self.click_to_aim(event),
         )
 
         self.update_mood_display()
@@ -56,7 +58,6 @@ class TurretControlApp:
         self.aim_area = tk.Canvas(self.root, width=200, height=200, bg="lightgrey")
         self.aim_area.place(x=10, y=50)
         self.aim_area.bind("<Motion>", self.cursor_motion)
-        self.aim_area.bind("<Button-1>", self.click_to_aim)
 
         # Motor Toggle
         self.motor_button = tk.Button(
@@ -111,13 +112,14 @@ class TurretControlApp:
 
     # --- Mood System ---
     def start_threads(self):
-        # threading.Thread(target=self.mood_loop, daemon=True).start()
-        # threading.Thread(target=self.increase_sad_chance, daemon=True).start()
+        threading.Thread(target=self.mood_loop, daemon=True).start()
+        threading.Thread(target=self.increase_sad_chance, daemon=True).start()
         pass
 
     def mood_loop(self):
         while True:
-            time.sleep(random.randint(5, 15))
+            # time.sleep(random.randint(5, 15))
+            time.sleep(random.randint(2, 5))
             self.determine_mood()
 
     def increase_sad_chance(self):
@@ -127,8 +129,6 @@ class TurretControlApp:
                 self.sad_chance += 10
 
     def determine_mood(self):
-        if self.commands_blocked:
-            return  # Skip if actions are blocked
         if random.randint(1, 100) <= self.angry_chance:
             self.current_mood = "Angry"
             self.perform_angry_action()
