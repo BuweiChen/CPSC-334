@@ -42,6 +42,7 @@ class TurretControlApp:
         self.aim_area = tk.Canvas(self.root, width=200, height=200, bg="lightgrey")
         self.aim_area.place(x=10, y=50)
         self.aim_area.bind("<Motion>", self.cursor_motion)
+        self.aim_area.bind("<Button-1>", self.click_to_aim)
 
         # Motor Toggle
         self.motor_button = tk.Button(
@@ -138,6 +139,22 @@ class TurretControlApp:
             self.pan_value.set(x)
             self.tilt_value.set(y)
             self.send_command(f"P{x}T{y}")
+
+    def click_to_aim(self, event):
+        if not self.cursor_tracking:
+            # Map click position to pan and tilt values
+            x = int(event.x / self.aim_area.winfo_width() * 180)
+            y = int(event.y / self.aim_area.winfo_height() * 180) + 30
+
+            # Constrain values
+            x = 180 - max(0, min(180, x))
+            y = max(30, min(300, y))
+
+            # Update Pan and Tilt
+            self.pan_value.set(x)
+            self.tilt_value.set(y)
+            self.send_command(f"P{x}T{y}")
+            self.status_label.config(text=f"Aimed at Pan: {x}, Tilt: {y}", fg="blue")
 
 
 # Run the app

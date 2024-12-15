@@ -15,7 +15,7 @@ const int motorPin = 18;
 
 // Servo limits
 const int pan_min = 0, pan_max = 270;
-const int tilt_min = 30, tilt_max = 210;
+const int tilt_min = 30, tilt_max = 300;
 const int shoot_default = 90, shoot_fire = 155; // Shoot: default/rest position and firing position
 const int laser_default = 90, laser_on = 105;  // Laser: default/rest position and "on" position
 
