@@ -46,7 +46,7 @@ void setup() {
 
   // Set servos to default positions
   pan_servo.write(90);   // Center position
-  tilt_servo.write(90);  // Center position
+  tilt_servo.write(110);  // Center position
   shoot_servo.write(shoot_default);
   laser_servo.write(laser_default);
 
