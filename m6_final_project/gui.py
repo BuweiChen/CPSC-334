@@ -16,8 +16,8 @@ class TurretControlApp:
         self.root.title("Turret Control Interface")
         self.root.geometry("400x500")
         self.cursor_tracking = False
-        # self.current_mood = "Neutral"
-        self.current_mood = "Angry"
+        self.current_mood = "Neutral"
+        # self.current_mood = "Sad"
 
         # Mood system variables
         self.angry_chance = 0
@@ -48,7 +48,7 @@ class TurretControlApp:
         )
 
         self.update_mood_display()
-        self.perform_angry_action()
+        # self.shake_head()
 
     # --- UI Creation ---
     def create_widgets(self):
@@ -184,7 +184,7 @@ class TurretControlApp:
     def shoot_action(self):
         if self.commands_blocked:
             return
-        if not self.is_cursor_in_aim_area():
+        if self.cursor_tracking and not self.is_cursor_in_aim_area():
             return
         if self.current_mood == "Sad":
             self.shake_head()
@@ -228,7 +228,14 @@ class TurretControlApp:
 
     def shake_head(self):
         self.commands_blocked = True
-        head_shake = [(90, 140), (80, 140), (100, 140), (80, 140), (90, 140)]
+        head_shake = [
+            (90, 140),
+            (70, 140),
+            (110, 140),
+            (70, 140),
+            (110, 140),
+            (90, 140),
+        ]
         for x, y in head_shake:
             self.send_command(f"P{x}T{y}")
             time.sleep(0.5)
