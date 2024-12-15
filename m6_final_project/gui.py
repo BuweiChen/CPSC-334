@@ -17,7 +17,7 @@ class TurretControlApp:
         self.root.geometry("400x500")
         self.cursor_tracking = False
         # self.current_mood = "Neutral"
-        self.current_mood = "Happy"
+        self.current_mood = "Angry"
 
         # Mood system variables
         self.angry_chance = 0
@@ -29,8 +29,8 @@ class TurretControlApp:
         self.motor_enabled = BooleanVar(value=False)
         self.laser_enabled = BooleanVar(value=False)
         self.speed_value = IntVar(value=0)
-        self.pan_value = IntVar(value=120)
-        self.tilt_value = IntVar(value=90)
+        self.pan_value = IntVar(value=90)
+        self.tilt_value = IntVar(value=140)
 
         # Create UI components
         self.create_widgets()
@@ -39,10 +39,16 @@ class TurretControlApp:
         # Bind keyboard events
         self.root.bind("<m>", lambda event: self.toggle_motor())
         self.root.bind("<l>", lambda event: self.toggle_laser())
-        self.root.bind("<Button-1>", lambda event: self.shoot_action())
         self.root.bind("<Escape>", lambda event: self.toggle_cursor_tracking(False))
 
+        # Bind shoot action only in cursor track mode
+        self.aim_area.bind(
+            "<Button-1>",
+            lambda event: self.shoot_action() if self.cursor_tracking else None,
+        )
+
         self.update_mood_display()
+        self.perform_angry_action()
 
     # --- UI Creation ---
     def create_widgets(self):
@@ -143,11 +149,15 @@ class TurretControlApp:
     def perform_angry_action(self):
         self.commands_blocked = True
         self.status_label.config(text="Angry! Blocking Commands...", fg="red")
-        random_pan = self.pan_value.get() + random.choice([-10, 10])
-        random_tilt = self.tilt_value.get() + random.choice([-10, 10])
-        self.send_command(f"P{random_pan}T{random_tilt}")
         self.send_command("M1")
-        time.sleep(2)
+        pan = self.pan_value.get()
+        tilt = self.tilt_value.get()
+        for _ in range(6):
+            random_pan = pan + random.choice([-10, 10])
+            random_tilt = tilt + random.choice([-10, 10])
+            self.send_command(f"P{random_pan}T{random_tilt}")
+            time.sleep(0.5)
+        self.send_command(f"P{pan}T{tilt}")
         self.send_command("M0")
         self.commands_blocked = False
 
@@ -174,11 +184,21 @@ class TurretControlApp:
     def shoot_action(self):
         if self.commands_blocked:
             return
+        if not self.is_cursor_in_aim_area():
+            return
         if self.current_mood == "Sad":
             self.shake_head()
             return
         self.send_command("S1")
         self.angry_chance += 4
+
+    def is_cursor_in_aim_area(self):
+        x, y = self.root.winfo_pointerxy()
+        aim_x1 = self.aim_area.winfo_rootx()
+        aim_y1 = self.aim_area.winfo_rooty()
+        aim_x2 = aim_x1 + self.aim_area.winfo_width()
+        aim_y2 = aim_y1 + self.aim_area.winfo_height()
+        return aim_x1 <= x <= aim_x2 and aim_y1 <= y <= aim_y2
 
     def dance_action(self):
         self.commands_blocked = True
