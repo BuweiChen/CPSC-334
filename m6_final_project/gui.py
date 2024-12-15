@@ -25,9 +25,16 @@ class TurretControlApp:
         self.create_widgets()
 
         # Bind keyboard events
-        self.root.bind("<m>", lambda event: self.toggle_motor())
-        self.root.bind("<l>", lambda event: self.toggle_laser())
-        self.root.bind("<Button-1>", lambda event: self.shoot_action())  # Left Click
+        self.root.bind(
+            "<m>", lambda event: self.toggle_motor() if self.cursor_tracking else None
+        )
+        self.root.bind(
+            "<l>", lambda event: self.toggle_laser() if self.cursor_tracking else None
+        )
+        self.root.bind(
+            "<Button-1>",
+            lambda event: self.shoot_action() if self.cursor_tracking else None,
+        )  # Left Click
         self.root.bind("<Escape>", lambda event: self.toggle_cursor_tracking(False))
 
     def create_widgets(self):
@@ -42,35 +49,33 @@ class TurretControlApp:
         )
         self.motor_button.place(x=250, y=10)
 
-        # Speed Display
-        tk.Label(self.root, text="Speed:").place(x=330, y=10)
-        self.speed_label = tk.Label(self.root, textvariable=self.speed_value)
-        self.speed_label.place(x=370, y=10)
-
         # Shoot Toggle
         self.shoot_button = tk.Button(
             self.root, text="Shoot", command=self.shoot_action
         )
         self.shoot_button.place(x=250, y=50)
 
-        # Pan and Tilt Values
+        # Pan, Tilt, and Speed Values
         Label(self.root, text="Pan:").place(x=250, y=90)
         Label(self.root, textvariable=self.pan_value).place(x=300, y=90)
 
         Label(self.root, text="Tilt:").place(x=250, y=120)
         Label(self.root, textvariable=self.tilt_value).place(x=300, y=120)
 
+        Label(self.root, text="Speed:").place(x=250, y=150)
+        Label(self.root, textvariable=self.speed_value).place(x=300, y=150)
+
         # Laser Toggle
         self.laser_button = tk.Button(
             self.root, text="Laser: Off", command=self.toggle_laser
         )
-        self.laser_button.place(x=250, y=160)
+        self.laser_button.place(x=250, y=190)
 
         # Cursor Track Toggle
         self.cursor_track_button = tk.Button(
             self.root, text="Cursor Track: Off", command=self.toggle_cursor_tracking
         )
-        self.cursor_track_button.place(x=250, y=200)
+        self.cursor_track_button.place(x=250, y=230)
 
         # Status Label
         self.status_label = tk.Label(self.root, text="Status: Ready", fg="green")
