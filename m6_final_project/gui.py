@@ -121,7 +121,7 @@ class TurretControlApp:
             y = int(event.y / self.aim_area.winfo_height() * 180) + 30
 
             # Constrain values
-            x = max(0, min(180, x))
+            x = 180 - max(0, min(180, x))
             y = max(30, min(210, y))
 
             # Update Pan and Tilt
