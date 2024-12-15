@@ -1,9 +1,9 @@
 import tkinter as tk
-from tkinter import IntVar, BooleanVar
+from tkinter import IntVar, BooleanVar, Label
 import requests
 
 # ESP32 Server Configuration
-ESP32_IP = "192.168.4.1"  # Replace with your ESP32 IP
+ESP32_IP = "192.168.4.1"
 PORT = 80
 
 
@@ -16,12 +16,19 @@ class TurretControlApp:
 
         # Variables for state
         self.motor_enabled = BooleanVar(value=False)
+        self.laser_enabled = BooleanVar(value=False)
+        self.speed_value = IntVar(value=0)
         self.pan_value = IntVar(value=120)
         self.tilt_value = IntVar(value=90)
-        self.laser_on = BooleanVar(value=False)
 
         # Create UI components
         self.create_widgets()
+
+        # Bind keyboard events
+        self.root.bind("<m>", lambda event: self.toggle_motor())
+        self.root.bind("<l>", lambda event: self.toggle_laser())
+        self.root.bind("<Button-1>", lambda event: self.shoot_action())  # Left Click
+        self.root.bind("<Escape>", lambda event: self.toggle_cursor_tracking(False))
 
     def create_widgets(self):
         # Aim Area
@@ -29,47 +36,39 @@ class TurretControlApp:
         self.aim_area.place(x=10, y=50)
         self.aim_area.bind("<Motion>", self.cursor_motion)
 
-        # Motor checkbox
-        self.motor_checkbox = tk.Checkbutton(
-            self.root,
-            text="Motor",
-            variable=self.motor_enabled,
-            command=self.toggle_motor,
+        # Motor Toggle
+        self.motor_button = tk.Button(
+            self.root, text="Motor: Off", command=self.toggle_motor
         )
-        self.motor_checkbox.place(x=270, y=10)
+        self.motor_button.place(x=250, y=10)
 
-        # Speed Button (for customization)
-        self.speed_button = tk.Button(
-            self.root, text="Speed", command=self.speed_action
-        )
-        self.speed_button.place(x=320, y=10)
+        # Speed Display
+        tk.Label(self.root, text="Speed:").place(x=330, y=10)
+        self.speed_label = tk.Label(self.root, textvariable=self.speed_value)
+        self.speed_label.place(x=370, y=10)
 
-        # Shoot Button
+        # Shoot Toggle
         self.shoot_button = tk.Button(
             self.root, text="Shoot", command=self.shoot_action
         )
         self.shoot_button.place(x=250, y=50)
 
         # Pan and Tilt Values
-        self.pan_label = tk.Label(self.root, text="Pan:")
-        self.pan_label.place(x=250, y=90)
-        self.pan_display = tk.Label(self.root, textvariable=self.pan_value)
-        self.pan_display.place(x=300, y=90)
+        Label(self.root, text="Pan:").place(x=250, y=90)
+        Label(self.root, textvariable=self.pan_value).place(x=300, y=90)
 
-        self.tilt_label = tk.Label(self.root, text="Tilt:")
-        self.tilt_label.place(x=250, y=120)
-        self.tilt_display = tk.Label(self.root, textvariable=self.tilt_value)
-        self.tilt_display.place(x=300, y=120)
+        Label(self.root, text="Tilt:").place(x=250, y=120)
+        Label(self.root, textvariable=self.tilt_value).place(x=300, y=120)
 
-        # Laser Button
+        # Laser Toggle
         self.laser_button = tk.Button(
-            self.root, text="Laser", command=self.toggle_laser
+            self.root, text="Laser: Off", command=self.toggle_laser
         )
         self.laser_button.place(x=250, y=160)
 
-        # Cursor Track Button
+        # Cursor Track Toggle
         self.cursor_track_button = tk.Button(
-            self.root, text="Cursor Track", command=self.toggle_cursor_tracking
+            self.root, text="Cursor Track: Off", command=self.toggle_cursor_tracking
         )
         self.cursor_track_button.place(x=250, y=200)
 
@@ -88,25 +87,31 @@ class TurretControlApp:
 
     # --- Event Handlers ---
     def toggle_motor(self):
-        state = 1 if self.motor_enabled.get() else 0
-        self.send_command(f"M{state}")
+        self.motor_enabled.set(not self.motor_enabled.get())
+        state = 255 if self.motor_enabled.get() else 0
+        self.speed_value.set(state)
+        self.motor_button.config(text=f"Motor: {'On' if state else 'Off'}")
+        self.send_command(f"M{int(self.motor_enabled.get())}")
 
-    def speed_action(self):
-        # Placeholder for Speed Button behavior
-        self.status_label.config(text="Speed button pressed", fg="blue")
+    def toggle_laser(self):
+        self.laser_enabled.set(not self.laser_enabled.get())
+        self.laser_button.config(
+            text=f"Laser: {'On' if self.laser_enabled.get() else 'Off'}"
+        )
+        self.send_command(f"L{int(self.laser_enabled.get())}")
 
     def shoot_action(self):
         self.send_command("S1")
         self.status_label.config(text="Shooting", fg="orange")
 
-    def toggle_laser(self):
-        state = 1 if not self.laser_on.get() else 0
-        self.laser_on.set(state)
-        self.send_command(f"L{state}")
-        self.status_label.config(text="Laser Toggled", fg="blue")
-
-    def toggle_cursor_tracking(self):
-        self.cursor_tracking = not self.cursor_tracking
+    def toggle_cursor_tracking(self, state=None):
+        if state is not None:
+            self.cursor_tracking = state
+        else:
+            self.cursor_tracking = not self.cursor_tracking
+        self.cursor_track_button.config(
+            text=f"Cursor Track: {'On' if self.cursor_tracking else 'Off'}"
+        )
         self.status_label.config(
             text="Cursor Tracking: On"
             if self.cursor_tracking
