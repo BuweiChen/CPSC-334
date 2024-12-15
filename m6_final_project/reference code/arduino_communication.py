@@ -1,21 +1,29 @@
-import serial
+import requests
 
-class com_ard():
-    def __init__(self, parent):
-        self.parent = parent
-        print("ard created")
+# Replace with the ESP32's IP address
+esp32_ip = "192.168.4.1"
+port = 80
 
 
-    def connect(self, port):
-        try:
-            self.ser = serial.Serial(port, 9600)
-            self.parent.connected = True
-            print("connected to arduino on port : ", port)
-            return True
-        except:
-            print("Not able to connect on this port")
-            return False
+def send_command(pan, tilt, shoot, laser, motor):
+    command = f"P{pan}T{tilt}S{shoot}L{laser}M{motor}"
+    url = f"http://{esp32_ip}:{port}/?{command}"
+    response = requests.get(url)
+    print(f"Sent: {command}, Response: {response.text}")
 
-    def send_message(self, message):
-        self.ser.write(message)
-        print(message)
+
+# Example usage
+send_command(120, 110, 1, 0, 0)  # Pan 90°, Tilt 45°, Shoot, Laser on
+
+
+# -90
+# 90
+
+# 30
+# 210
+
+# 90
+# 155
+
+# 90
+# 105

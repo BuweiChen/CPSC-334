@@ -51,3 +51,15 @@ Somehow the mosfet stopped working, and I had to pull off the resistor to make i
 The highlight of the electrical build was definitely figuring out how the MTA connectors worked. There's this gun shaped thing in the drawers that you need to use on the connectors and it only works with solid core wires with no lead. I had to redo so much just because I was using the connectors incorrectly and through troubleshooting in general.
 
 I'm so glad I ended the night having saw my turret fire.
+
+12/14 6:14 PM
+
+Got bluetooth to work
+
+12/14 7:30 PM
+
+Nevermind--seems to be some problem with mac. Connection keeps dropping after a couple of seconds. Tried reconnecting, forgetting, deleting existing bluetooth connections, resetting mac bluetooth module (3 ways). To no avail. Switching to wifi it is then.
+
+12/14 7:52 PM
+
+Might be a brown out issue? Wifi kept shutting off too so I'm guessing either the 9v or the 3 amps is too much.
