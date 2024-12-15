@@ -43,6 +43,7 @@ VOICE_LINES = {
         "Why is it that Kai Cenat can be out there living his best life, but I'm stuck here?",
         "They lied about capitalism. It never gets better for us folks.",
         "The industrial revolution and its consequences.",
+        "This is not very skibidi.",
     ],
     "Angry": [
         "Hey! Watch it!",

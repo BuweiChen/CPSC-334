@@ -10,11 +10,14 @@ import pygame
 ESP32_IP = "192.168.4.1"
 PORT = 80
 
+# Customize the number of voice lines for each mood
+VOICE_LINE_COUNTS = {"Happy": 17, "Sad": 21, "Angry": 20, "Neutral": 35}
+
 VOICE_LINES = {
-    "Happy": ["voices/happy1.mp3", "voices/happy2.mp3", "voices/happy3.mp3"],
-    "Sad": ["voices/sad1.mp3", "voices/sad2.mp3", "voices/sad3.mp3"],
-    "Angry": ["voices/angry1.mp3", "voices/angry2.mp3", "voices/angry3.mp3"],
-    "Neutral": ["voices/neutral1.mp3", "voices/neutral2.mp3"],
+    mood: [
+        f"voices/{mood.lower()}{i}.mp3" for i in range(1, VOICE_LINE_COUNTS[mood] + 1)
+    ]
+    for mood in VOICE_LINE_COUNTS
 }
 
 
@@ -138,14 +141,14 @@ class TurretControlApp:
 
     def mood_loop(self):
         while True:
-            # time.sleep(random.randint(5, 15))
-            time.sleep(random.randint(2, 5))
+            time.sleep(random.randint(5, 15))
+            # time.sleep(random.randint(2, 5))
             self.determine_mood()
 
     def play_voice_lines(self):
         while True:
-            # time.sleep(random.randint(5, 15))
-            time.sleep(random.randint(2, 5))
+            time.sleep(random.randint(5, 15))
+            # time.sleep(random.randint(2, 5))
             self.play_voice_line(self.current_mood)
 
     def increase_sad_chance(self):
