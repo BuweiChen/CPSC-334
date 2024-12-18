@@ -4,6 +4,8 @@ A turret that shoots lasers, controlled wirelessly from your laptop :) Module 4 
 
 Project Video: https://youtu.be/RGZOuUn0OxQ
 
+Project Blog: https://www.notion.so/Laser-Turret-v1-0-1413781e92768074bc29f9189e029282 
+
 ## Code Walkthrough
 
 Essentially, we start a server on the ESP32 controlling the turret that listens for commands and executes them accordingly; and on the laptop side we have a python script that connects to the server and sends commands according to which keystrokes it detects from the user.

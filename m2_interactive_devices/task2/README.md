@@ -4,6 +4,8 @@ An interactive device that involves the cooperation between two snakes armed wit
 
 Project video: https://youtu.be/jCafPipQ5yU
 
+Project blog: https://www.notion.so/Snakez-With-Laserz-1143781e92768087b451fdcdd870d503
+
 ## Running the code on your own
 1. Clone the repo
 2. cd into this directory from the terminal

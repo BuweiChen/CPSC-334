@@ -4,6 +4,8 @@ An artful visualization of social anxiety with the aid of Mr Incredible and the 
 
 Project Video: https://youtu.be/t09To4tB3DI
 
+Project Blog: https://www.notion.so/What-s-In-the-Box-Anxiety-1353781e9276804480b6fad16326b513 
+
 ## Code Walkthrough
 
 ### Heartbeat Sensor
