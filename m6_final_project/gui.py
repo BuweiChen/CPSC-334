@@ -155,7 +155,7 @@ class TurretControlApp:
         while True:
             time.sleep(5)
             if time.time() - self.last_command_time > 5:
-                self.sad_chance += 10
+                self.sad_chance += 2
 
     def determine_mood(self):
         if random.randint(1, 100) <= self.angry_chance:
