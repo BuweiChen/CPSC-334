@@ -101,7 +101,7 @@ void handleCommand(String request) {
 
 On the laptop side, I took the time to develop a series of features for the GUI and state-update logic that made the turret come alive.
 
-![Screenshot 2024-12-17 at 11.28.11 PM.png](Screenshot 2024-12-17 at 11.28.11 PM.png)
+![Screenshot 2024-12-17 at 11.28.11 PM.png](ui.png)
 
 I won’t discuss the UI specific stuff, as that is all standard tkinter stuff. However, I do think the event handling, mood system, and voice lines portion of the app are worth discussing.
 
